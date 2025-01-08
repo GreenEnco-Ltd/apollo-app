@@ -64,6 +64,6 @@ process.on("unhandledRejection", (err) => {
 //   fetchInverterData({ year: { start: "2019-10-04", end: "2025-01-06" } });
 // });
 
-fetchAnGenMeter24hData({ year: { start: "2020-03-01", end: "2025-01-06" } });
-fetchPyranoMeterData({ year:  { start: "2020-03-01", end: "2025-01-06" } });
-fetchInverterData({ year: { start: "2019-10-04", end: "2025-01-06" } });
+// fetchAnGenMeter24hData({ year: { start: "2020-03-01", end: "2025-01-06" } });
+// fetchPyranoMeterData({ year:  { start: "2020-03-01", end: "2025-01-06" } });
+fetchInverterData({ year: { start: "2019-01-06", end: "2025-01-06" } });

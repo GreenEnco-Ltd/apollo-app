@@ -1,7 +1,12 @@
 const { default: axios } = require("axios");
 const { MongoClient } = require("mongodb");
 const DateArray = require("./Data/dates.json");
-const { IDInverterList, IDPyronoMeterList, IDGenerationMeterList } = require("./Data/project");
+const inverterDateArray = require("./Data/dates-month.json");
+const {
+  IDInverterList,
+  IDPyronoMeterList,
+  IDGenerationMeterList,
+} = require("./Data/project");
 
 module.exports.connectToDatabase = async () => {
   // const client = new MongoClient(`mongodb://localhost:27017`);
@@ -132,11 +137,12 @@ module.exports.fetchAnGenMeter24hData = async ({ year, month, day }) => {
       acc.push(curr);
     return acc;
   }, []);
-//   console.log("genmeter ", finalArray[0],finalArray[finalArray.length-1])
-// return
+  //   console.log("genmeter ", finalArray[0],finalArray[finalArray.length-1])
+  // return
   for (var i = 0; i < IDGenerationMeterList.length; i++) {
     const deviceId = IDGenerationMeterList[i].id;
-    const collectionName = IDGenerationMeterList[i].id?.slice(-5) + "_genMeter" || "";
+    const collectionName =
+      IDGenerationMeterList[i].id?.slice(-5) + "_genMeter" || "";
     const filter1 = JSON.stringify({
       field: "device",
       operator: "=",
@@ -212,11 +218,12 @@ module.exports.fetchPyranoMeterData = async ({ year, month, day }) => {
       acc.push(curr);
     return acc;
   }, []);
-//   console.log("pyranometer ", finalArray[0],finalArray[finalArray.length-1])
-// return
+  //   console.log("pyranometer ", finalArray[0],finalArray[finalArray.length-1])
+  // return
   for (var i = 0; i < IDPyronoMeterList.length; i++) {
     const deviceId = IDPyronoMeterList[i].id;
-    const collectionName = IDPyronoMeterList[i].id?.slice(-5) + "_pyronomter" || "";
+    const collectionName =
+      IDPyronoMeterList[i].id?.slice(-5) + "_pyronomter" || "";
     const filter1 = JSON.stringify({
       field: "device",
       operator: "=",
@@ -283,7 +290,8 @@ module.exports.fetchInverterData = async ({ year, month, day }) => {
 
   let startDate = year ? year.start : month ? month.start : day.start;
   let endDate = year ? year.end : month ? month.end : day.end;
-  let finalDate = DateArray.reduce((acc, curr) => {
+
+  let finalDate = inverterDateArray.reduce((acc, curr) => {
     if (
       curr.substring(0, startDate.length) >= startDate &&
       curr.substring(0, endDate.length) <= endDate
@@ -292,8 +300,8 @@ module.exports.fetchInverterData = async ({ year, month, day }) => {
     return acc;
   }, []);
 
-//   console.log("inverter ", finalDate[0],finalDate[finalDate.length-1])
-// return
+  //   console.log("inverter ", finalDate[0],finalDate[finalDate.length-1])
+  // return
   for (let i = 0; i < IDInverterList.length; i++) {
     const inverterList = IDInverterList[i].inverterList || [];
     const deviceId = IDInverterList[i].id;
@@ -310,17 +318,19 @@ module.exports.fetchInverterData = async ({ year, month, day }) => {
         operator: "=",
         value: inverter,
       });
-      for (var iii = 0; iii < finalDate.length; iii++) {
-        let date = finalDate[iii];
+      for (var iii = 0; iii < finalDate.length - 1; iii++) {
+        let date1 = finalDate[iii];
+        let date2 = finalDate[iii + 1];
+        console.log(date1,date2)
         const filter3 = JSON.stringify({
             field: "Datetime",
             operator: ">=",
-            value: `${date}T00:00:00.000Z`,
+            value: `${date1}T00:00:00.000Z`,
           }),
           filter4 = JSON.stringify({
             field: "Datetime",
             operator: "<=",
-            value: `${date}T23:59:59.000Z`,
+            value: `${date2}T23:59:59.000Z`,
           });
 
         try {
@@ -343,17 +353,30 @@ module.exports.fetchInverterData = async ({ year, month, day }) => {
             fetchingData: "inverter",
             projectID: deviceId,
             inverterName: inverter,
-            fetchingDate: date,
+            fetchingDateFrom: date1,
+            fetchingDateTo: date2,
           };
-          // console.log(records.length)
+          console.log(records.length,date1,date2)
           if (records?.length > 0) {
             await db.collection(collectionName).insertMany(records);
+            if(records?.length>=10000){
+              await db.collection("inverter_data_exceed_logs").insertOne({
+                ...logDetail,
+                DateTime: new Date().toLocaleString(),
+                insertDataLength: records?.length,
+                sucess: true,
+                fetchingDateFrom: date1,
+            fetchingDateTo: date2,
+              });
+            }
           }
           await db.collection("inverter_sucess_logs").insertOne({
             ...logDetail,
             DateTime: new Date().toLocaleString(),
             insertDataLength: records?.length,
             sucess: true,
+            fetchingDateFrom: date1,
+            fetchingDateTo: date2,
           });
         } catch (error) {
           await db.collection("inverter_error_logs").insertOne({
@@ -361,6 +384,8 @@ module.exports.fetchInverterData = async ({ year, month, day }) => {
             DateTime: new Date().toLocaleString(),
             error: error?.message || "Error Not Found",
             sucess: false,
+            fetchingDateFrom: date1,
+            fetchingDateTo: date2,
           });
         }
       }
