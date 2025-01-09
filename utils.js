@@ -10,7 +10,9 @@ const {
 
 module.exports.connectToDatabase = async () => {
   // const client = new MongoClient(`mongodb://localhost:27017`);
-  const client = new MongoClient(`mongodb://GreenEncoDB:GreenEnco2024@greenencodb.cluster-cf6w22y6ekly.eu-west-1.docdb.amazonaws.com:27017/?tls=true&tlsCAFile=global-bundle.pem&replicaSet=rs0&readPreference=secondaryPreferred&retryWrites=false`);
+  const client = new MongoClient(
+    `mongodb://GreenEncoDB:GreenEnco2024@greenencodb.cluster-cf6w22y6ekly.eu-west-1.docdb.amazonaws.com:27017/?tls=true&tlsCAFile=global-bundle.pem&replicaSet=rs0&readPreference=secondaryPreferred&retryWrites=false`
+  );
 
   try {
     await client.connect();
@@ -321,7 +323,6 @@ module.exports.fetchInverterData = async ({ year, month, day }) => {
       for (var iii = 0; iii < finalDate.length - 1; iii++) {
         let date1 = finalDate[iii];
         let date2 = finalDate[iii + 1];
-        console.log(date1,date2)
         const filter3 = JSON.stringify({
             field: "Datetime",
             operator: ">=",
@@ -356,17 +357,17 @@ module.exports.fetchInverterData = async ({ year, month, day }) => {
             fetchingDateFrom: date1,
             fetchingDateTo: date2,
           };
-          console.log(records.length,date1,date2)
+          console.log(records.length, date1, date2);
           if (records?.length > 0) {
             await db.collection(collectionName).insertMany(records);
-            if(records?.length>=10000){
+            if (records?.length >= 10000) {
               await db.collection("inverter_data_exceed_logs").insertOne({
                 ...logDetail,
                 DateTime: new Date().toLocaleString(),
                 insertDataLength: records?.length,
                 sucess: true,
                 fetchingDateFrom: date1,
-            fetchingDateTo: date2,
+                fetchingDateTo: date2,
               });
             }
           }
