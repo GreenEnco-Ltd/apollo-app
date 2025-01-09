@@ -1,7 +1,8 @@
 const { default: axios } = require("axios");
 const { MongoClient } = require("mongodb");
 const DateArray = require("./Data/dates.json");
-const inverterDateArray = require("./Data/dates-month.json");
+// const inverterDateArray = require("./Data/dates-month.json");
+const inverterDateArray = require("./Data/dates-month2.json");
 const {
   IDInverterList,
   IDPyronoMeterList,
@@ -357,7 +358,6 @@ module.exports.fetchInverterData = async ({ year, month, day }) => {
             fetchingDateFrom: date1,
             fetchingDateTo: date2,
           };
-          console.log(records.length, date1, date2);
           if (records?.length > 0) {
             await db.collection(collectionName).insertMany(records);
             if (records?.length >= 10000) {
